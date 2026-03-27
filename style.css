@@ -1,0 +1,68 @@
+:root {
+    --neon-blue: #89CFF0;
+    --neon-green: #25d366;
+    --dark-bg: #02050a;
+    --card-bg: #0a0f19;
+}
+
+body {
+    background-color: var(--dark-bg);
+    color: white;
+    font-family: 'Rajdhani', sans-serif;
+    margin: 0;
+    overflow-x: hidden;
+}
+
+header {
+    background: rgba(2, 5, 10, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 2px solid var(--neon-blue);
+    box-shadow: 0 0 15px rgba(137, 207, 240, 0.3);
+}
+
+.hero-section {
+    height: 80vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle, rgba(10,15,25,1) 0%, rgba(2,5,10,1) 100%);
+}
+
+h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 3.5rem;
+    text-transform: uppercase;
+    letter-spacing: 5px;
+    margin-bottom: 10px;
+    text-shadow: 0 0 10px var(--neon-blue);
+}
+
+.btn-pedido {
+    background: transparent;
+    border: 2px solid var(--neon-green);
+    color: var(--neon-green);
+    padding: 15px 40px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: 0.3s;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(37, 211, 102, 0.2);
+}
+
+.btn-pedido:hover {
+    background: var(--neon-green);
+    color: black;
+    box-shadow: 0 0 30px var(--neon-green);
+    transform: scale(1.05);
+}
+
+#adminPanel {
+    background: var(--card-bg);
+    border: 1px dashed var(--neon-blue);
+    margin: 20px;
+    border-radius: 10px;
+    padding: 20px;
+}

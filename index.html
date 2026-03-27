@@ -6,6 +6,7 @@
     <title>Levi Dev - Mural de Histórias</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
+        /* MANTENDO EXATAMENTE O SEU CSS ORIGINAL */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         @keyframes breath-blue {
             0% { box-shadow: 0 0 10px rgba(137, 207, 240, 0.2); border-color: rgba(137, 207, 240, 0.2); }
@@ -38,14 +39,13 @@
 
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(8px); }
         .auth-box { background: #050a14; padding: 40px; border-radius: 20px; width: 320px; border: 2px solid #89CFF0; text-align: center; }
-        input[type="text"], input[type="password"] { width: 100%; padding: 12px; margin-bottom: 15px; background: #000; border: 1px solid #1e293b; border-radius: 5px; color: white; }
+        input[type="text"], input[type="password"] { width: 100%; padding: 12px; margin-bottom: 15px; background: #000; border: 1px solid #1e293b; border-radius: 5px; color: white; outline: none; }
+        input[type="text"]:focus { border-color: #89CFF0; }
     </style>
 </head>
 <body onload="verificarSessao()">
 
-    <audio id="bgMusic" loop>
-        <source src="alianca.mp3" type="audio/mpeg">
-    </audio>
+    <audio id="bgMusic" loop src="alianca.mp3"></audio>
 
     <header>
         <div class="logo">Levi Dev</div>
@@ -55,12 +55,12 @@
     <div id="adminPanel">
         <h3 style="color:#89CFF0; font-family:'Orbitron'; font-size:14px; margin-bottom:10px;"> Levi's Dashboard</h3>
         <div class="stat-card">
-            <p style="font-size: 14px; font-weight: bold;">📦 Pedidos Internos:</p>
-            <div id="orderHistory" style="max-height: 100px; overflow-y: auto;"></div>
+            <p style="font-size: 14px; font-weight: bold;">📦 Pedidos Internos (Firebase):</p>
+            <div id="orderHistory" style="max-height: 150px; overflow-y: auto;"></div>
         </div>
         <div class="stat-card">
-            <p style="font-size: 14px; font-weight: bold;">👥 Contas Criadas:</p>
-            <ul id="userList" style="list-style: none; font-size: 12px; margin-top: 5px;"></ul>
+            <p style="font-size: 14px; font-weight: bold;">👥 Contas no Banco:</p>
+            <ul id="userList" style="list-style: none; font-size: 12px; margin-top: 5px; max-height: 100px; overflow-y: auto;"></ul>
         </div>
         <button onclick="fazerLogout()" style="margin-top:15px; color:#ff4d6d; background:none; border:none; cursor:pointer; font-size: 11px;">SAIR DO SISTEMA</button>
     </div>
@@ -96,74 +96,120 @@
             <div id="login-fields">
                 <input type="text" id="user-login" placeholder="USUÁRIO">
                 <input type="password" id="pass-login" placeholder="SENHA">
-                <button style="width:100%; padding:12px; background:#89CFF0; border:none; font-weight:bold;" onclick="fazerLogin()">ENTRAR</button>
+                <button style="width:100%; padding:12px; background:#89CFF0; border:none; font-weight:bold; cursor:pointer;" id="btnEntrarFirebase">ENTRAR</button>
                 <p style="margin-top:15px; color:#64748b; cursor:pointer; font-size: 12px;" onclick="alternarAuth(true)">Criar conta</p>
             </div>
             <div id="cad-fields" style="display: none;">
                 <input type="text" id="user-cad" placeholder="NOVO USUÁRIO">
                 <input type="password" id="pass-cad" placeholder="CRIAR SENHA">
-                <button style="width:100%; padding:12px; background:#89CFF0; border:none; font-weight:bold;" onclick="cadastrar()">CADASTRAR</button>
+                <button style="width:100%; padding:12px; background:#89CFF0; border:none; font-weight:bold; cursor:pointer;" id="btnCadastrarFirebase">CADASTRAR</button>
                 <p style="margin-top:15px; color:#64748b; cursor:pointer; font-size: 12px;" onclick="alternarAuth(false)">Já tenho conta</p>
             </div>
             <p style="margin-top:20px; color:#ff4d6d; cursor:pointer; font-size: 11px;" onclick="fecharModal()">CANCELAR</p>
         </div>
     </div>
 
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
+        import { getDatabase, ref, set, get, push, child, onValue } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBhCkqMw1L23UkvuA-8qP5wSiIKi9EWH9s",
+            authDomain: "loja-d0659.firebaseapp.com",
+            projectId: "loja-d0659",
+            databaseURL: "https://loja-d0659-default-rtdb.firebaseio.com",
+            appId: "1:418251982418:web:753bb5b59118e7d485c18b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // FUNÇÃO DE LOGIN FIREBASE
+        document.getElementById('btnEntrarFirebase').onclick = async () => {
+            const u = document.getElementById('user-login').value.trim();
+            const p = document.getElementById('pass-login').value.trim();
+            
+            if(u === "Levizxkk7" && p === "080226") {
+                localStorage.setItem('usuario_logado', u);
+                location.reload(); return;
+            }
+
+            const snapshot = await get(child(ref(db), `usuarios/${u}`));
+            if (snapshot.exists() && snapshot.val().senha === p) {
+                localStorage.setItem('usuario_logado', u);
+                location.reload();
+            } else {
+                alert("Usuário ou senha inválidos!");
+            }
+        };
+
+        // FUNÇÃO DE CADASTRO FIREBASE
+        document.getElementById('btnCadastrarFirebase').onclick = async () => {
+            const u = document.getElementById('user-cad').value.trim();
+            const p = document.getElementById('pass-cad').value.trim();
+            if(!u || !p) return alert("Preencha tudo!");
+
+            const check = await get(child(ref(db), `usuarios/${u}`));
+            if(check.exists()) return alert("Esse usuário já existe!");
+
+            await set(ref(db, `usuarios/${u}`), { senha: p });
+            alert("Conta criada com sucesso!");
+            location.reload();
+        };
+
+        // CARREGAR DASHBOARD SE FOR O ADM
+        const logado = localStorage.getItem('usuario_logado');
+        if(logado === "Levizxkk7") {
+            // Carrega Pedidos
+            onValue(ref(db, 'pedidos/'), (snap) => {
+                const hist = document.getElementById('orderHistory');
+                hist.innerHTML = "";
+                snap.forEach(item => {
+                    const p = item.val();
+                    hist.innerHTML = `<div class="order-item"><strong>${p.user}</strong>: ${p.detalhes} <br><small>${p.data}</small></div>` + hist.innerHTML;
+                });
+            });
+            // Carrega Usuários
+            onValue(ref(db, 'usuarios/'), (snap) => {
+                const lista = document.getElementById('userList');
+                lista.innerHTML = "";
+                snap.forEach(item => {
+                    lista.innerHTML += `<li>👤 ${item.key} | 🔑: ${item.val().senha}</li>`;
+                });
+            });
+        }
+
+        // SALVAR PEDIDO NO BANCO
+        window.salvarPedidoFirebase = function(pedido) {
+            push(ref(db, 'pedidos/'), pedido);
+        }
+    </script>
+
     <script>
-        let logado = false;
-        let usuarioAtual = "";
-        let pedidos = JSON.parse(localStorage.getItem('historico_pedidos')) || [];
+        // MANTENDO SUAS FUNÇÕES ORIGINAIS DE INTERFACE
+        let usuarioAtual = localStorage.getItem('usuario_logado');
 
         function verificarSessao() {
-            const salvo = localStorage.getItem('usuario_logado');
-            if (salvo) {
-                logado = true;
-                usuarioAtual = salvo;
-                document.getElementById('btnStatus').innerText = salvo.toUpperCase();
-                if (salvo === "Levizxkk7") {
+            if (usuarioAtual) {
+                document.getElementById('btnStatus').innerText = usuarioAtual.toUpperCase();
+                if (usuarioAtual === "Levizxkk7") {
                     document.getElementById('adminPanel').style.display = 'block';
-                    carregarDadosAdm();
                 }
             }
         }
 
+        // Música infinita ao primeiro toque
         document.addEventListener('click', () => { 
-            document.getElementById('bgMusic').play().catch(()=>{}); 
+            const music = document.getElementById('bgMusic');
+            if(music.paused) { music.play(); music.volume = 0.4; }
         }, { once: true });
 
         function abrirModal() { document.getElementById('modalAuth').style.display = 'flex'; }
         function fecharModal() { document.getElementById('modalAuth').style.display = 'none'; }
-        
         function alternarAuth(m) { 
             document.getElementById('login-fields').style.display = m ? 'none' : 'block'; 
             document.getElementById('cad-fields').style.display = m ? 'block' : 'none'; 
-        }
-
-        function fazerLogin() {
-            const u = document.getElementById('user-login').value.trim();
-            const p = document.getElementById('pass-login').value.trim();
-            
-            if (u === "Levizxkk7" && p === "080226") {
-                logado = true; usuarioAtual = "Levizxkk7";
-                localStorage.setItem('usuario_logado', "Levizxkk7");
-                location.reload(); return;
-            }
-
-            const senhaSalva = localStorage.getItem('u_' + u);
-            if(senhaSalva === p) {
-                logado = true; usuarioAtual = u;
-                localStorage.setItem('usuario_logado', u);
-                location.reload();
-            } else { alert("Dados incorretos!"); }
-        }
-
-        function cadastrar() {
-            const u = document.getElementById('user-cad').value.trim();
-            const p = document.getElementById('pass-cad').value.trim();
-            if(u && p) { 
-                localStorage.setItem('u_' + u, p); 
-                alert("Conta criada!"); alternarAuth(false); 
-            }
+            document.getElementById('modalTitle').innerText = m ? "CADASTRO" : "ACESSO";
         }
 
         function fazerLogout() {
@@ -171,66 +217,39 @@
             location.reload();
         }
 
-        function carregarDadosAdm() {
-            const lista = document.getElementById('userList');
-            lista.innerHTML = "";
-            for (let i = 0; i < localStorage.length; i++) {
-                let chave = localStorage.key(i);
-                if (chave.startsWith('u_')) {
-                    let li = document.createElement('li');
-                    li.innerHTML = `👤 ${chave.replace('u_', '')} | 🔑: ${localStorage.getItem(chave)}`;
-                    lista.appendChild(li);
-                }
-            }
-            const hist = document.getElementById('orderHistory');
-            hist.innerHTML = pedidos.length ? "" : "Nenhum pedido.";
-            pedidos.forEach(p => {
-                let div = document.createElement('div');
-                div.className = "order-item";
-                div.innerHTML = `<strong>${p.user}</strong>: ${p.detalhes} <br><small>${p.data}</small>`;
-                hist.prepend(div);
-            });
-        }
-
         function atualizarTotal() {
             let base = 19.99;
             let temMusica = document.getElementById('add-music').checked;
             let qtdFotos = parseInt(document.getElementById('qty-photos').value) || 0;
-            
-            // Força o limite de 3 no cálculo caso o usuário digite manual
-            if (qtdFotos > 3) {
-                qtdFotos = 3;
-                document.getElementById('qty-photos').value = 3;
-            }
+            if (qtdFotos > 3) { qtdFotos = 3; document.getElementById('qty-photos').value = 3; }
             
             let total = base + (temMusica ? 2.5 : 0) + (qtdFotos * 1.5);
             document.getElementById('display-total').innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
             
-            let resumo = `Mural Base (R$ 19,99)`;
-            if(temMusica) resumo += `\n- Adicional: Música (R$ 2,50)`;
-            if(qtdFotos > 0) resumo += `\n- Adicional: ${qtdFotos} Foto(s) Extra(s) (R$ ${ (qtdFotos * 1.5).toFixed(2).replace('.',',') })`;
+            let resumo = `Mural Base`;
+            if(temMusica) resumo += ` + Música`;
+            if(qtdFotos > 0) resumo += ` + ${qtdFotos} Fotos`;
             
             return { total: total.toFixed(2).replace('.',','), resumo: resumo };
         }
 
         function finalizarPedido() {
-            if(!logado) { abrirModal(); return; }
+            if(!usuarioAtual) { abrirModal(); return; }
             const info = atualizarTotal();
             const novoPedido = { 
                 user: usuarioAtual, 
-                detalhes: info.resumo.replace(/\n/g, ' ') + " | Total: R$ " + info.total, 
+                detalhes: info.resumo + " | Total: R$ " + info.total, 
                 data: new Date().toLocaleString('pt-BR') 
             };
-            pedidos.push(novoPedido);
-            localStorage.setItem('historico_pedidos', JSON.stringify(pedidos));
+            
+            // Chama a função global do Firebase
+            window.salvarPedidoFirebase(novoPedido);
             
             const textoWhastApp = window.encodeURIComponent(
                 `Olá Levi! Me chamo ${usuarioAtual}.\n\n` +
-                `*DETALHES DO MEU PEDIDO:*\n` +
-                `${info.resumo}\n\n` +
+                `*PEDIDO:* ${info.resumo}\n` +
                 `*VALOR FINAL: R$ ${info.total}*`
             );
-            
             window.open(`https://api.whatsapp.com/send?phone=5582987582181&text=${textoWhastApp}`);
         }
     </script>
