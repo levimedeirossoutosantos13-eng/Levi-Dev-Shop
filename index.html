@@ -45,7 +45,6 @@
 
     <audio id="bgMusic" loop>
         <source src="alianca.mp3" type="audio/mpeg">
-        <source src="Alianca.mp3" type="audio/mpeg">
     </audio>
 
     <header>
@@ -56,27 +55,36 @@
     <div id="adminPanel">
         <h3 style="color:#89CFF0; font-family:'Orbitron'; font-size:14px; margin-bottom:10px;"> Levi's Dashboard</h3>
         <div class="stat-card">
-            <p style="font-size: 14px; font-weight: bold;">📦 Pedidos via WhatsApp:</p>
-            <div id="orderHistory" style="max-height: 150px; overflow-y: auto;"></div>
+            <p style="font-size: 14px; font-weight: bold;">📦 Histórico Interno:</p>
+            <div id="orderHistory" style="max-height: 100px; overflow-y: auto;"></div>
         </div>
         <div class="stat-card">
             <p style="font-size: 14px; font-weight: bold;">👥 Contas Criadas:</p>
             <ul id="userList" style="list-style: none; font-size: 12px; margin-top: 5px;"></ul>
         </div>
-        <button onclick="fazerLogout()" style="margin-top:15px; color:#ff4d6d; background:none; border:none; cursor:pointer; font-size: 11px;">DESLOGAR</button>
+        <button onclick="fazerLogout()" style="margin-top:15px; color:#ff4d6d; background:none; border:none; cursor:pointer; font-size: 11px;">SAIR DO SISTEMA</button>
     </div>
 
     <div class="container">
         <div class="product-card">
             <div class="photo-box">
-                <img src="mural.png" id="imgMural" onerror="this.onerror=null; this.src='Mural.png';" alt="Mural de Histórias">
+                <img src="mural.png" alt="Mural de Histórias">
             </div>
             <h2>Mural de Histórias</h2>
-            <p class="product-desc">Eternize seus momentos com 4 fotos interativas, frase personalizada e um calendário exclusivo.</p>
+            <p class="product-desc">Eternize momentos com fotos interativas e frase personalizada.</p>
+            
             <div class="configurator">
-                <label class="option"><span>Música (+ R$ 2,50)</span><input type="checkbox" id="add-music" onchange="atualizarTotal()"></label>
-                <div class="option"><span>Fotos Extras (+2)</span><input type="number" id="qty-photos" min="0" max="3" value="0" onchange="atualizarTotal()"></div>
-                <div style="text-align: right; border-top: 1px solid #1e293b; padding-top: 15px;"><span class="total-price" id="display-total">R$ 19,99</span></div>
+                <label class="option">
+                    <span>Música (+ R$ 2,50)</span>
+                    <input type="checkbox" id="add-music" onchange="atualizarTotal()">
+                </label>
+                <div class="option">
+                    <span>Fotos Extras (+ R$ 1,50 cada)</span>
+                    <input type="number" id="qty-photos" min="0" max="10" value="0" onchange="atualizarTotal()">
+                </div>
+                <div style="text-align: right; border-top: 1px solid #1e293b; padding-top: 15px;">
+                    <span class="total-price" id="display-total">R$ 19,99</span>
+                </div>
             </div>
             <button class="btn-cart" onclick="finalizarPedido()">ENVIAR PEDIDO</button>
         </div>
@@ -106,7 +114,6 @@
         let usuarioAtual = "";
         let pedidos = JSON.parse(localStorage.getItem('historico_pedidos')) || [];
 
-        // Verifica se já estava logado antes de atualizar
         function verificarSessao() {
             const salvo = localStorage.getItem('usuario_logado');
             if (salvo) {
@@ -120,7 +127,9 @@
             }
         }
 
-        document.addEventListener('click', () => { document.getElementById('bgMusic').play().catch(()=>{}); }, { once: true });
+        document.addEventListener('click', () => { 
+            document.getElementById('bgMusic').play().catch(()=>{}); 
+        }, { once: true });
 
         function abrirModal() { document.getElementById('modalAuth').style.display = 'flex'; }
         function fecharModal() { document.getElementById('modalAuth').style.display = 'none'; }
@@ -136,18 +145,24 @@
             if (u === "Levizxkk7" && p === "080226") {
                 logado = true; usuarioAtual = "Levizxkk7";
                 localStorage.setItem('usuario_logado', "Levizxkk7");
-                document.getElementById('btnStatus').innerText = "ADM";
-                document.getElementById('adminPanel').style.display = 'block';
-                carregarDadosAdm(); fecharModal(); return;
+                location.reload(); return;
             }
 
-            const senhaSalva = localStorage.getItem('user_' + u);
+            const senhaSalva = localStorage.getItem('u_' + u);
             if(senhaSalva === p) {
                 logado = true; usuarioAtual = u;
                 localStorage.setItem('usuario_logado', u);
-                document.getElementById('btnStatus').innerText = u.toUpperCase();
-                fecharModal();
+                location.reload();
             } else { alert("Dados incorretos!"); }
+        }
+
+        function cadastrar() {
+            const u = document.getElementById('user-cad').value.trim();
+            const p = document.getElementById('pass-cad').value.trim();
+            if(u && p) { 
+                localStorage.setItem('u_' + u, p); 
+                alert("Conta criada!"); alternarAuth(false); 
+            }
         }
 
         function fazerLogout() {
@@ -155,53 +170,61 @@
             location.reload();
         }
 
-        function cadastrar() {
-            const u = document.getElementById('user-cad').value.trim();
-            const p = document.getElementById('pass-cad').value.trim();
-            if(u && p) { 
-                localStorage.setItem('user_' + u, p); 
-                alert("Conta criada!"); alternarAuth(false); 
-            }
-        }
-
         function carregarDadosAdm() {
             const lista = document.getElementById('userList');
             lista.innerHTML = "";
             for (let i = 0; i < localStorage.length; i++) {
                 let chave = localStorage.key(i);
-                if (chave.startsWith('user_')) {
+                if (chave.startsWith('u_')) {
                     let li = document.createElement('li');
-                    let nomeLimpo = chave.replace('user_', '');
-                    li.innerHTML = `👤 ${nomeLimpo} | 🔑: ${localStorage.getItem(chave)}`;
+                    li.innerHTML = `👤 ${chave.replace('u_', '')} | 🔑: ${localStorage.getItem(chave)}`;
                     lista.appendChild(li);
                 }
             }
             const hist = document.getElementById('orderHistory');
-            hist.innerHTML = pedidos.length ? "" : "Nenhum pedido ainda.";
+            hist.innerHTML = pedidos.length ? "" : "Nenhum pedido.";
             pedidos.forEach(p => {
                 let div = document.createElement('div');
                 div.className = "order-item";
-                div.innerHTML = `<strong>${p.user}</strong> pediu R$ ${p.valor} <br><small>${p.data}</small>`;
+                div.innerHTML = `<strong>${p.user}</strong>: ${p.detalhes} <br><small>${p.data}</small>`;
                 hist.prepend(div);
             });
         }
 
         function atualizarTotal() {
-            let t = 19.99;
-            if(document.getElementById('add-music').checked) t += 2.5;
-            let q = parseInt(document.getElementById('qty-photos').value) || 0;
-            t += (q * 1.5);
-            document.getElementById('display-total').innerText = `R$ ${t.toFixed(2).replace('.', ',')}`;
-            return t;
+            let base = 19.99;
+            let temMusica = document.getElementById('add-music').checked;
+            let qtdFotos = parseInt(document.getElementById('qty-photos').value) || 0;
+            
+            let total = base + (temMusica ? 2.5 : 0) + (qtdFotos * 1.5);
+            document.getElementById('display-total').innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
+            
+            let resumo = `Mural Base (R$ 19,99)`;
+            if(temMusica) resumo += ` + Música (R$ 2,50)`;
+            if(qtdFotos > 0) resumo += ` + ${qtdFotos} Fotos Extras (R$ ${ (qtdFotos * 1.5).toFixed(2) })`;
+            
+            return { total: total.toFixed(2), resumo: resumo };
         }
 
         function finalizarPedido() {
             if(!logado) { abrirModal(); return; }
-            const total = atualizarTotal();
-            const novoPedido = { user: usuarioAtual, valor: total.toFixed(2), data: new Date().toLocaleString('pt-BR') };
+            const info = atualizarTotal();
+            const novoPedido = { 
+                user: usuarioAtual, 
+                detalhes: info.resumo + " | Total: R$ " + info.total, 
+                data: new Date().toLocaleString('pt-BR') 
+            };
             pedidos.push(novoPedido);
             localStorage.setItem('historico_pedidos', JSON.stringify(pedidos));
-            window.open(`https://api.whatsapp.com/send?phone=5582987582181&text=Quero o Mural! Total: R$ ${total.toFixed(2)}`);
+            
+            const textoWhastApp = window.encodeURIComponent(
+                `Olá Levi! Me chamo ${usuarioAtual}.\n\n` +
+                `*MEU PEDIDO:*\n` +
+                `${info.resumo}\n\n` +
+                `*VALOR TOTAL: R$ ${info.total}*`
+            );
+            
+            window.open(`https://api.whatsapp.com/send?phone=5582987582181&text=${textoWhastApp}`);
             if(usuarioAtual === "Levizxkk7") carregarDadosAdm();
         }
     </script>
