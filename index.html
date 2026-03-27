@@ -55,7 +55,7 @@
     <div id="adminPanel">
         <h3 style="color:#89CFF0; font-family:'Orbitron'; font-size:14px; margin-bottom:10px;"> Levi's Dashboard</h3>
         <div class="stat-card">
-            <p style="font-size: 14px; font-weight: bold;">📦 Histórico Interno:</p>
+            <p style="font-size: 14px; font-weight: bold;">📦 Pedidos Internos:</p>
             <div id="orderHistory" style="max-height: 100px; overflow-y: auto;"></div>
         </div>
         <div class="stat-card">
@@ -79,8 +79,8 @@
                     <input type="checkbox" id="add-music" onchange="atualizarTotal()">
                 </label>
                 <div class="option">
-                    <span>Fotos Extras (+ R$ 1,50 cada)</span>
-                    <input type="number" id="qty-photos" min="0" max="10" value="0" onchange="atualizarTotal()">
+                    <span>Fotos Extras (Máx 3 | R$ 1,50 un)</span>
+                    <input type="number" id="qty-photos" min="0" max="3" value="0" onchange="atualizarTotal()">
                 </div>
                 <div style="text-align: right; border-top: 1px solid #1e293b; padding-top: 15px;">
                     <span class="total-price" id="display-total">R$ 19,99</span>
@@ -133,6 +133,7 @@
 
         function abrirModal() { document.getElementById('modalAuth').style.display = 'flex'; }
         function fecharModal() { document.getElementById('modalAuth').style.display = 'none'; }
+        
         function alternarAuth(m) { 
             document.getElementById('login-fields').style.display = m ? 'none' : 'block'; 
             document.getElementById('cad-fields').style.display = m ? 'block' : 'none'; 
@@ -196,14 +197,20 @@
             let temMusica = document.getElementById('add-music').checked;
             let qtdFotos = parseInt(document.getElementById('qty-photos').value) || 0;
             
+            // Força o limite de 3 no cálculo caso o usuário digite manual
+            if (qtdFotos > 3) {
+                qtdFotos = 3;
+                document.getElementById('qty-photos').value = 3;
+            }
+            
             let total = base + (temMusica ? 2.5 : 0) + (qtdFotos * 1.5);
             document.getElementById('display-total').innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
             
             let resumo = `Mural Base (R$ 19,99)`;
-            if(temMusica) resumo += ` + Música (R$ 2,50)`;
-            if(qtdFotos > 0) resumo += ` + ${qtdFotos} Fotos Extras (R$ ${ (qtdFotos * 1.5).toFixed(2) })`;
+            if(temMusica) resumo += `\n- Adicional: Música (R$ 2,50)`;
+            if(qtdFotos > 0) resumo += `\n- Adicional: ${qtdFotos} Foto(s) Extra(s) (R$ ${ (qtdFotos * 1.5).toFixed(2).replace('.',',') })`;
             
-            return { total: total.toFixed(2), resumo: resumo };
+            return { total: total.toFixed(2).replace('.',','), resumo: resumo };
         }
 
         function finalizarPedido() {
@@ -211,7 +218,7 @@
             const info = atualizarTotal();
             const novoPedido = { 
                 user: usuarioAtual, 
-                detalhes: info.resumo + " | Total: R$ " + info.total, 
+                detalhes: info.resumo.replace(/\n/g, ' ') + " | Total: R$ " + info.total, 
                 data: new Date().toLocaleString('pt-BR') 
             };
             pedidos.push(novoPedido);
@@ -219,13 +226,12 @@
             
             const textoWhastApp = window.encodeURIComponent(
                 `Olá Levi! Me chamo ${usuarioAtual}.\n\n` +
-                `*MEU PEDIDO:*\n` +
+                `*DETALHES DO MEU PEDIDO:*\n` +
                 `${info.resumo}\n\n` +
-                `*VALOR TOTAL: R$ ${info.total}*`
+                `*VALOR FINAL: R$ ${info.total}*`
             );
             
             window.open(`https://api.whatsapp.com/send?phone=5582987582181&text=${textoWhastApp}`);
-            if(usuarioAtual === "Levizxkk7") carregarDadosAdm();
         }
     </script>
 </body>
